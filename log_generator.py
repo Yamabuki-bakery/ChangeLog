@@ -26,14 +26,17 @@ BIRTHDAY_ARR = [0,
                 947689200, 963759600, 958057200, 953910000, 976114800]
 
 BIRTHDAY_DATETIME = []
+now = datetime.datetime.now(tz=jptz)
 
 
 def gen_birthday_datetime():
     global BIRTHDAY_DATETIME
-    now = datetime.datetime.now(tz=jptz)
     for timestamp in BIRTHDAY_ARR:
         dt = datetime.datetime.fromtimestamp(timestamp, tz=jptz)
         dt = dt.replace(year=now.year)
+        if now > dt + datetime.timedelta(days=1):  # birthday has passed for one day
+            dt = dt.replace(year=dt.year + 1)
+
         BIRTHDAY_DATETIME.append(dt)
 
 
@@ -67,7 +70,6 @@ def start():
     result = '【Latest Event】\n'
     result += event_dict['name'] + '\n'
 
-    now = datetime.datetime.now(tz=jptz)
     start_time = datetime.datetime.fromtimestamp(event_dict['start_time'], tz=jptz)
     end_time = datetime.datetime.fromtimestamp(event_dict['end_time'], tz=jptz)
 
@@ -107,8 +109,6 @@ def start():
     # check remaining days
     for i in range(35):
         char_id = i + 1
-        if now > BIRTHDAY_DATETIME[char_id] + datetime.timedelta(days=1):  # birthday has passed
-            BIRTHDAY_DATETIME[char_id] = BIRTHDAY_DATETIME[char_id].replace(year=BIRTHDAY_DATETIME[char_id].year + 1)
         remain = BIRTHDAY_DATETIME[char_id] - now
         remain_sec.append({'id': char_id, 'remain': int(remain.total_seconds())})
         # print(remain.days)
@@ -119,14 +119,14 @@ def start():
         char_id = remain_sec[i]['id']
         result += get_name[char_id]
         result += ' (' + BIRTHDAY_DATETIME[char_id].strftime("%d %b, %Y") + ') '
-        if remain_sec[i]['remain'] <= 0:
+        if remain_sec[i]['remain'] <= 0:  # birthday passed but no more than one day
             result += 'Happy Birthday🎂️'
         result += '\n'
 
     result += '\nI\'m a bot, and this message is automatically generated.\nLast update: ' \
               + now.strftime("%H:%M %a %d. %b %Y, %Z")
 
-    # print(result)
+    print(result)
     f = open('change_log.json', 'w')
     mdict = {}
     mdict.update({"msg": result})
