@@ -53,7 +53,16 @@ def start():
     session = requests.session()
     recents = session.get(RECENT_URL, timeout=15).json()
 
-    latest_event_id = sorted(recents['events'].keys())[-1]
+    def return_release_time(event_id: str) -> int:
+        release_time = recents['events'][event_id]["startAt"][0]
+        if release_time is None:
+            return 0
+        else:
+            return int(release_time)
+    latest_event_id = sorted(
+        recents['events'].keys(),
+        key=return_release_time
+    )[-1]
     latest_event = session.get(EVENT_URL + str(latest_event_id) + '.json', timeout=15).json()
     card_dict = session.get(CARD_URL, timeout=15).json()
 
@@ -127,10 +136,10 @@ def start():
               + now.strftime("%H:%M %a %d. %b %Y, %Z")
 
     print(result)
-    f = open('change_log.json', 'w')
+    f = open('change_log.json', 'w', encoding="UTF-8")
     mdict = {}
     mdict.update({"msg": result})
-    json.dump(mdict, f, indent=4, separators=(',', ': '))
+    json.dump(mdict, f, indent=4, separators=(',', ': '), ensure_ascii=False)
     f.close()
 
 
